@@ -2,9 +2,13 @@
 //This program comes with ABSOLUTELY NO WARRANTY.
 //This is free software, and you are welcome to redistribute it under certain conditions.
 //Read LICENSE.md for more information.
-
+#ifdef WIN32
 #include <Windows.h>
 #include <ShlObj.h>
+#else
+#include "linux_utils.hpp"
+#endif
+
 #include <iostream>
 
 //engine
@@ -17,6 +21,7 @@ namespace EngineFile
 {
 	string FileExplorer::Select(const SearchType& searchType)
 	{
+		#ifdef WIN32
 		//initialize COM
 		HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
 		if (FAILED(hr))
@@ -173,7 +178,10 @@ namespace EngineFile
 			CoUninitialize();
 			return "";
 		}
-
+		#else
+		std::string filePath;
+		std::cin >> filePath;
+		#endif
 		//convert the wide string to a string
 		wstring ws(filePath);
 
@@ -188,18 +196,12 @@ namespace EngineFile
 			NULL,
 			NULL);
 
+		int size_needed = WCTMB(nullptr, ws.c_str(), static_cast<int>(ws.length());
+
 		//convert wide string to utf-8 encoded narrow string
 		string narrowPath(size_needed, 0);
-		WideCharToMultiByte(
-			CP_UTF8,
-			0,
-			ws.c_str(),
-			static_cast<int>(ws.length()),
-			&narrowPath[0],
-			size_needed,
-			NULL,
-			NULL);
-
+		WCTMB(&narrowPath[0], narrowPath.c_str(), static_cast<int>(narrowPath.length());
+		#ifdef WIN32
 		//free memory allocated for filePath
 		CoTaskMemFree(filePath);
 
@@ -211,7 +213,7 @@ namespace EngineFile
 
 		//uninitialze COM
 		CoUninitialize();
-
+		#endif
 		return narrowPath;
 	}
 }
