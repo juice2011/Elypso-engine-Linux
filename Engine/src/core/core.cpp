@@ -2,9 +2,12 @@
 //This program comes with ABSOLUTELY NO WARRANTY.
 //This is free software, and you are welcome to redistribute it under certain conditions.
 //Read LICENSE.md for more information.
-
+#ifdef WIN32
 #include <Windows.h>
 #include <ShlObj.h>
+#elseif
+#include "linux_utils.hpp"
+#endif
 #include <filesystem>
 #include <fstream>
 
@@ -50,11 +53,11 @@ namespace Core
 		//
 
 		PWSTR docsFolderWidePath;
-		HRESULT result = SHGetKnownFolderPath(FOLDERID_Documents, 0, nullptr, &docsFolderWidePath);
-		if (SUCCEEDED(result))
+		std::string result = DOCUMENT_PATH;
+		if (result)
 		{
 			wstring wPath(docsFolderWidePath);
-			CoTaskMemFree(docsFolderWidePath); //free the allocated memory
+			
 
 			//get the required buffer size
 			int size_needed = WideCharToMultiByte(
@@ -67,17 +70,11 @@ namespace Core
 				NULL,
 				NULL);
 
+			int size_needed = WCTMB(nullptr, wPath.c_str(), static_cast<int>(wPath.length());
+
 			//convert wide string to utf-8 encoded narrow string
 			string narrowPath(size_needed, 0);
-			WideCharToMultiByte(
-				CP_UTF8,
-				0,
-				wPath.c_str(),
-				static_cast<int>(wPath.length()),
-				&narrowPath[0],
-				size_needed,
-				NULL,
-				NULL);
+			WCTMB(&narrow_path[0], wPath.c_str(), static_cast<int>(wPath.length());
 
 			docsPath = String::StringReplace(
 				string(narrowPath.begin(), narrowPath.end()), "\\", "/") +
@@ -222,9 +219,9 @@ namespace Core
 
 	void Engine::CreateErrorPopup(const char* errorTitle, const char* errorMessage)
 	{
-		int result = MessageBoxA(nullptr, errorMessage, errorTitle, MB_ICONERROR | MB_OK);
+		NOTIFY(errorTitle, errorMessage);
 
-		if (result == IDOK) Shutdown();
+		Shutdown();
 	}
 
 	void Engine::Shutdown()
